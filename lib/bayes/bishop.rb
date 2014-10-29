@@ -52,7 +52,7 @@ module Bishop
   
   # A tokenizer which, having split words, reduces them to porter stemmed tokens
   class StemmingTokenizer < SimpleTokenizer
-    def tokenize( item, stop_words )
+    def tokenize( item, stop_words=[] )
       super( item, stop_words ).map { |word| word.stem }
     end
   end
@@ -89,7 +89,7 @@ module Bishop
     
     # Add the specified stop word
     def add_stop_word( word )
-      @stop_words << word unless @stop_words.include? word
+      @stop_words << word.downcase unless @stop_words.include? word
     end
     
     # Load stopwords from the specified YAML formatted file
