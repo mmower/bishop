@@ -23,4 +23,11 @@ class TestTokenizers < Minitest::Test
     assert_equal r1, tokenizer.tokenize(s1,%w(delta phi))
   end
   
+  def test_stemming_tokenizer
+    tokenizer = Bishop::StemmingTokenizer.new
+    s1 = '  thankfulness liveliness socializer socialism  '
+    r1 = %w( thank liveli social social )
+    tokens = tokenizer.tokenize(s1)
+    assert_equal r1, tokens
+  end
 end
