@@ -19,22 +19,20 @@ module Bishop
   #
   # TODO Figure out if "self." references instead of "@" are because of this
   
-  # pools hash values contain BayesData objects
+  # pools hash values contain BayesPool objects
   # TODO Rename to something more obvious?
   
-  class BayesData
+  class BayesPool
   
     attr_accessor :name  # pool name
     attr_accessor :token_count # count of tokens in the pool
     attr_accessor :train_count # number of times train has been called for this pool
     attr_reader :training # array of 'uid' values passed in with each train call, identifies source?
     attr_reader :data # hash that contains probabilities
-    attr_reader :pool # TODO what is this???
   
-    def initialize( name = '', pool = nil )
+    def initialize( name = '' )
       @name = name
       @training = []
-      @pool = pool
       @data = Hash.new( 0.0 )
       @token_count = 0
       @train_count = 0
@@ -71,15 +69,15 @@ module Bishop
   
     attr_accessor :tokenizer # instance of Tokenizer that handles tokenization
     attr_accessor :combiner # usually anonymous block 
-    attr_accessor :data_class # reference to BayesData class
-    attr_accessor :pools # hash, key = pool name, value = BayesData class
+    attr_accessor :data_class # reference to BayesPool class
+    attr_accessor :pools # hash, key = pool name, value = BayesPool class
     attr_accessor :dirty # set to true for any changes, false when pool_probs is called
-    attr_accessor :train_count # TODO is this used?  Perhaps confused with BayesData.train_count?
+    attr_accessor :train_count # TODO is this used?  Perhaps confused with BayesPool.train_count?
     attr_accessor :corpus # shortcut to __Corpus__ pool
     attr_accessor :cache # created by bayes_cache, contains raw count???
     attr_reader :stop_words # array containing stop words
   
-    def initialize( tokenizer = SimpleTokenizer, data_class = BayesData, &combiner )
+    def initialize( tokenizer = SimpleTokenizer, data_class = BayesPool, &combiner )
       @tokenizer = tokenizer.new
       @combiner = combiner || Proc.new { |probs,ignore| Bishop.robinson( probs, ignore ) }
       @data_class = data_class

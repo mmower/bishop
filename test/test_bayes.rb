@@ -12,7 +12,7 @@ class TestBayes < Minitest::Test
   def test_bayes_initializer
     b = Bishop::Bayes.new
     assert_instance_of Bishop::SimpleTokenizer, b.tokenizer
-    #assert_instance_of Bishop::BayesData, b.data_class
+    #assert_instance_of Bishop::BayesPool, b.data_class
     refute_nil b.combiner
     assert_equal 1, b.pools.length
     refute_nil b.corpus
