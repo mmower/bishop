@@ -19,9 +19,6 @@ module Bishop
   #
   # TODO Figure out if "self." references instead of "@" are because of this
   
-  # pools hash values contain BayesPool objects
-  # TODO Rename to something more obvious?
-  
   class BayesPool
   
     attr_accessor :name  # pool name
@@ -44,7 +41,7 @@ module Bishop
     end
     
     def to_s
-      "<BayesDict: #{self.name.nil? || self.name.empty? ? 'noname' : self.name}, #{self.token_count} tokens>"
+      "<BayesPool: #{self.name.nil? || self.name.empty? ? 'noname' : self.name}, #{self.token_count} tokens>"
     end
   
   end

@@ -18,12 +18,12 @@ class TestBayesPool < Minitest::Test
     assert_equal 0, bp.token_count
     assert_equal 0, bp.train_count
     refute bp.trained_on?('test')
-    assert_equal "<BayesDict: noname, 0 tokens>", bp.to_s
+    assert_equal "<BayesPool: noname, 0 tokens>", bp.to_s
   end
   
   def test_creation_with_name
     bp = Bishop::BayesPool.new('george')
     assert_equal 'george', bp.name
-    assert_equal "<BayesDict: george, 0 tokens>", bp.to_s
+    assert_equal "<BayesPool: george, 0 tokens>", bp.to_s
   end
 end
