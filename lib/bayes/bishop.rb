@@ -17,22 +17,32 @@ module Bishop
   # than by dumping it's instance variables, hence no instance variables
   # in a Hash subclass get dumped either.
   #
+  # TODO Figure out if "self." references instead of "@" are because of this
+  
+  # pools hash values contain BayesData objects
+  # TODO Rename to something more obvious?
+  
   class BayesData
   
-    attr_accessor :token_count, :train_count, :name
-    attr_reader :training, :data, :pool
+    attr_accessor :name  # pool name
+    attr_accessor :token_count # count of tokens in the pool
+    attr_accessor :train_count # number of times train has been called for this pool
+    attr_reader :training # array of 'uid' values passed in with each train call, identifies source?
+    attr_reader :data # hash that contains probabilities
+    attr_reader :pool # TODO what is this???
   
     def initialize( name = '', pool = nil )
       @name = name
       @training = []
       @pool = pool
       @data = Hash.new( 0.0 )
-      self.token_count = 0
-      self.train_count = 0
+      @token_count = 0
+      @train_count = 0
     end
     
-    def trained_on?( item )
-      self.training.include? item
+    # Optional uid value set in train call
+    def trained_on?( uid )
+      @training.include? uid
     end
     
     def to_s
@@ -59,8 +69,15 @@ module Bishop
   
   class Bayes
   
-    attr_accessor :dirty, :train_count, :pools, :tokenizer, :data_class, :corpus, :cache, :combiner
-    attr_reader :data_class, :stop_words
+    attr_accessor :tokenizer # instance of Tokenizer that handles tokenization
+    attr_accessor :combiner # usually anonymous block 
+    attr_accessor :data_class # reference to BayesData class
+    attr_accessor :pools # hash, key = pool name, value = BayesData class
+    attr_accessor :dirty # set to true for any changes, false when pool_probs is called
+    attr_accessor :train_count # TODO is this used?  Perhaps confused with BayesData.train_count?
+    attr_accessor :corpus # shortcut to __Corpus__ pool
+    attr_accessor :cache # created by bayes_cache, contains raw count???
+    attr_reader :stop_words # array containing stop words
   
     def initialize( tokenizer = SimpleTokenizer, data_class = BayesData, &combiner )
       @tokenizer = tokenizer.new
@@ -79,7 +96,7 @@ module Bishop
     end
     
     def dirty?
-      self.dirty
+      @dirty
     end
     
     # Add each of the specified stop words
@@ -176,37 +193,37 @@ module Bishop
       @train_count = data[:train_count]
       @stop_words = data[:stop_words]
       
-      self.dirty = true
+      @dirty = true
     end
     
     def pool_names
-      self.pools.keys.sort.reject { |name| name == '__Corpus__' }
-	end
+      @pools.keys.sort.reject { |name| name == '__Corpus__' }
+	  end
   
     # Create a cache of the metrics for each pool.
     def build_cache
-      self.cache = {}
+      @cache = {}
       
-      self.pools.each do |name,pool|
+      @pools.each do |name,pool|
         unless name == '__Corpus__'
         
-          pool_count = pool.token_count
-          them_count = [ 1, self.corpus.token_count - pool_count ].max
+          pool_count = pool.token_count  # tokens in this pool
+          them_count = [ 1, @corpus.token_count - pool_count ].max  # tokens in other pools
           cache_dict = self.cache[ name ] ||= @data_class.new( name )
           
           self.corpus.data.each do |token,tot_count|
             this_count = pool.data[token]
 
-            unless this_count == 0.0
-              other_count = tot_count - this_count
+            unless this_count == 0.0 # if token is in this pool
+              other_count = tot_count - this_count # number of references in other pools
               
-              if pool_count > 0
-                good_metric = [ 1.0, other_count / pool_count ].min
+              if pool_count > 0 # if pool has tokens
+                good_metric = [ 1.0, other_count / pool_count ].min # prob token is not in this pool
               else
-                good_metric = 1.0
+                good_metric = 1.0 # set to 1 to avoid divide by zero
               end
             
-              bad_metric = [ 1.0, this_count / them_count ].min
+              bad_metric = [ 1.0, this_count / them_count ].min # prob token is in a different pool
             
               f = bad_metric / ( good_metric + bad_metric )
               
@@ -221,6 +238,7 @@ module Bishop
 
     # Get the probabilities for each pool, recreating the cached information if
     # any token information for any of the pools has changed.
+    # TODO Should this be private?
     def pool_probs
       if self.dirty?
         self.build_cache
@@ -230,29 +248,32 @@ module Bishop
     end
     
     # Create a token array from the specified input.
+    # TODO Should this be private?
     def get_tokens( input )
       self.tokenizer.tokenize( input, self.stop_words )
     end
     
     # For each word trained in the pool, collect it's occurrence data in the pool into a sorted array.
+    # TODO Should this be private?
     def get_probs( pool, words )
       words.find_all { |word| pool.data.has_key? word }.map { |word| [word,pool.data[word]] }.sort
     end
     
+    # TODO allow array of already tokenized tokens instead of string
     def train( pool_name, item, uid = nil )
       tokens = get_tokens( item )
       pool = new_pool( pool_name )
       train_( pool, tokens )
       self.corpus.train_count += 1
       pool.train_count += 1
-      if uid
+      if uid # TODO Remove this?  Logic around untraining is probably wrong since tokens aren't tied to a uid
         pool.training.push( uid )
       end    
       self.dirty = true
     end
     
     def train_( pool, tokens )
-      wc = 0
+      wc = 0 # TODO clean this up (wc is clumsy)
       tokens.each do |token|
         pool.data[token] += 1
         self.corpus.data[token] += 1
@@ -266,8 +287,8 @@ module Bishop
       tokens = get_tokens( item )
       pool = new_pool( pool_name )
       untrain_( pool, tokens )
-      self.corpus.train_count += 1
-      pool.train_count += 1
+      self.corpus.train_count += 1 # huh?
+      pool.train_count += 1 # huh?
       if uid
         pool.training.delete( uid )
       end    
@@ -296,8 +317,8 @@ module Bishop
       end
     end
     
-    def trained_on?( msg )
-      self.cache.values.any? { |v| v.trained_on? msg }
+    def trained_on?( token )
+      self.cache.values.any? { |v| v.trained_on? token }
     end
       
     # Call this method to classify a "message".  The return value will be
@@ -314,12 +335,16 @@ module Bishop
         end    
       end
       
-      res.sort
+      h = Hash.new
+      res.sort.each { |a| h[a[0]] = a[1]}
+      h
     end
 
     private :train_, :untrain_
   end
   
+  # default "combiner" set in initialize
+  # ignore is truly ignored
   def self.robinson( probs, ignore )
     nth = 1.0/probs.length
     what_is_p = 1.0 - probs.map { |p| 1.0 - p[1] }.inject( 1.0 ) { |s,v| s * v } ** nth
@@ -328,6 +353,7 @@ module Bishop
     ( 1 + what_is_s ) / 2
   end
    
+  # not used
   def self.robinson_fisher( probs, ignore )
     n = probs.length
     
