@@ -133,6 +133,37 @@ class TestBayes < Minitest::Test
 
     assert guess_lincoln['lincoln'] > 0.9
     assert guess_jabber['jabber'] > 0.9
+    
+    #STDOUT.puts "\nlincoln: #{b.pool_data('lincoln').join(',')}"
+    #STDOUT.puts "\njabber: #{b.pool_data('jabber').join(',')}"
+    b.train('romeo',r)
+    #STDOUT.puts "\nromeo: #{b.pool_data('romeo').join(',')}"
+    g1 = b.guess('vorpal')
+    g2 = b.guess('consecrate')
+    
+    #g1.each { |k,v| STDOUT.puts "\nmerge1: #{k}: #{v}" }
+    #g2.each { |k,v| STDOUT.puts "\nmerge2: #{k}: #{v}" }
+    refute g1.has_key?('romeo')
+    refute g2.has_key?('romeo')
+    
+    b.merge_pools('romeo','jabber')
+    #STDOUT.puts "\nromeo: #{b.pool_data('romeo').join(',')}"
+    
+    g3 = b.guess('vorpal')
+    #g3.each { |k,v| STDOUT.puts "\nmerge3: #{k}: #{v}" }
+    assert g3.has_key?('jabber')
+    assert g3.has_key?('romeo')
+    refute g3.has_key?('lincoln')
+
+    b.merge_pools('romeo','lincoln')
+    #STDOUT.puts "\nromeo: #{b.pool_data('romeo').join(',')}"
+    
+    g4 = b.guess('consecrate')
+    #g4.each { |k,v| STDOUT.puts "\nmerge4: #{k}: #{v}" }
+    refute g4.has_key?('jabber')
+    assert g4.has_key?('romeo')
+    assert g4.has_key?('lincoln')
+    
   end
   
   
