@@ -16,7 +16,6 @@ class TestBayes < Minitest::Test
     refute_nil b.combiner
     assert_equal 1, b.pools.length
     refute_nil b.corpus
-    assert_equal 0, b.train_count
     assert b.dirty
     assert b.dirty?
     assert_equal 0, b.stop_words.length

@@ -69,7 +69,6 @@ module Bishop
     attr_accessor :data_class # reference to BayesPool class
     attr_accessor :pools # hash, key = pool name, value = BayesPool class
     attr_accessor :dirty # set to true for any changes, false when pool_probs is called
-    attr_accessor :train_count # TODO is this used?  Perhaps confused with BayesPool.train_count?
     attr_accessor :corpus # shortcut to __Corpus__ pool
     attr_accessor :cache # created by bayes_cache, contains raw count???
     attr_reader :stop_words # array containing stop words
