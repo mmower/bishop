@@ -20,7 +20,7 @@ module Bishop
   class BayesData
   
     attr_accessor :token_count, :train_count, :name
-    attr_reader :training, :data
+    attr_reader :training, :data, :pool
   
     def initialize( name = '', pool = nil )
       @name = name
@@ -36,16 +36,16 @@ module Bishop
     end
     
     def to_s
-      "<BayesDict: #{self.name || noname}, #{self.token_count} tokens>"
+      "<BayesDict: #{self.name.nil? || self.name.empty? ? 'noname' : self.name}, #{self.token_count} tokens>"
     end
   
   end
   
   # A tokenizer class which splits words removing non word characters except hyphens.
   class SimpleTokenizer
-    def tokenize( item, stop_words )
+    def tokenize( item, stop_words=[] )
       item.split( /\s+/ ).map do |i|
-        token = i.split( /\-/ ).map { |token| token.downcase.gsub( /\W/, "" ) }.join( "-" )
+        i.split( /\-/ ).map { |token| token.downcase.gsub( /\W/, "" ) }.join( "-" )
       end.reject { |t| t == "" || t == "-" || stop_words.detect { |w| w == t } }
     end
   end
