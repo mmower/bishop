@@ -9,6 +9,7 @@
 
 require 'yaml'
 require 'stemmer'
+require 'json'
 
 module Bishop
 
@@ -66,7 +67,7 @@ module Bishop
   
     attr_accessor :tokenizer # instance of Tokenizer that handles tokenization
     attr_accessor :combiner # usually anonymous block 
-    attr_accessor :data_class # reference to BayesPool class
+    attr_accessor :data_class # reference to BayesPool class, TODO is this necessary???
     attr_accessor :pools # hash, key = pool name, value = BayesPool class
     attr_accessor :dirty # set to true for any changes, false when pool_probs is called
     attr_accessor :corpus # shortcut to __Corpus__ pool
@@ -80,9 +81,33 @@ module Bishop
       @pools = {}
       @corpus = new_pool( '__Corpus__' )
       @pools['__Corpus__'] = @corpus
-      @train_count = 0
       @dirty = true
       @stop_words = []
+    end
+    
+    def to_json
+      h = { :tokenizer => @tokenizer.class.name,
+        :stop_words => @stop_words.join(',')
+      }
+      pools = {}
+      @pools.each do |pool_name,pool_data|
+        data = pool_data.data
+        sorted_data = data.sort do |a,b|
+          if a[1] == b[1]
+            a[0] <=> b[0]
+          else
+            a[1] <=> b[1]
+          end
+        end
+        pools[pool_name] = {
+          :token_count => pool_data.token_count,
+          :train_count => pool_data.train_count,
+          :training => pool_data.training.join(','),
+          :data => sorted_data.to_h
+        }
+      end
+      h[:pools] = pools
+      JSON.pretty_generate(h)
     end
     
     def commit
@@ -184,7 +209,6 @@ module Bishop
       @pools.each { |pool_name,pool| pool.data.default = 0.0 }
       @corpus = self.pools['__Corpus__']
       
-      @train_count = data[:train_count]
       @stop_words = data[:stop_words]
       
       @dirty = true
