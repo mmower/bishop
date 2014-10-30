@@ -13,7 +13,6 @@ class TestBayesPool < Minitest::Test
     bp = Bishop::BayesPool.new
     refute_nil bp
     assert bp.name.empty?
-    assert_equal 0, bp.training.length
     refute_nil bp.data
     assert_equal 0, bp.token_count
     assert_equal 0, bp.train_count
@@ -26,4 +25,5 @@ class TestBayesPool < Minitest::Test
     assert_equal 'george', bp.name
     assert_equal "<BayesPool: george, 0 tokens>", bp.to_s
   end
+  
 end
