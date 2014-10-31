@@ -2,10 +2,10 @@ require 'rubygems'
 
 SPEC = Gem::Specification.new do |s|
 	s.name			=		"bishop"
-	s.version		=		"0.4.0"
+	s.version		=		"0.5.0"
 	s.author		=		"Matt Mower"
 	s.email			=		"self@mattmower.com"
-	s.homepage		=		"http://rubyforge.org/projects/bishop/"
+	s.homepage		=		"https://github.com/maymount/bishop"
 	s.platform		=		Gem::Platform::RUBY
 	s.summary		=		"Bayesian classification and ART-2 clustering library."
 	

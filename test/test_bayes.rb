@@ -7,7 +7,7 @@ Bundler.require(:default, :test)
 require_relative '../lib/bayes/bishop'
 
 class TestBayes < Minitest::Test
-  parallelize_me!
+  #parallelize_me!
 
   LINCOLN1 = "Four score and seven years ago our fathers brought forth on this continent,"+
     " a new nation, conceived in Liberty, and dedicated to the proposition that all"+
@@ -44,11 +44,9 @@ class TestBayes < Minitest::Test
   def test_bayes_initializer
     b = Bishop::Bayes.new
     assert_instance_of Bishop::SimpleTokenizer, b.tokenizer
-    #assert_instance_of Bishop::BayesPool, b.data_class
     refute_nil b.combiner
-    assert_equal 1, b.pools.length
+    assert_equal 0, b.pools.length
     refute_nil b.corpus
-    assert b.dirty
     assert b.dirty?
     assert_equal 0, b.stop_words.length
   end
@@ -134,6 +132,39 @@ class TestBayes < Minitest::Test
 
     assert guess_lincoln['lincoln'] > 0.9
     assert guess_jabber['jabber'] > 0.9
+  end
+  
+  def test_train_array
+    b = Bishop::Bayes.new
+    t = Bishop::SimpleTokenizer.new
+    b.load_default_stop_words
+  
+    b.train('a', t.tokenize(LINCOLN1))
+    b.train('a', t.tokenize(LINCOLN2))
+    b.train('a', t.tokenize(LINCOLN3))
+
+    b.train('b', LINCOLN1)
+    b.train('b', LINCOLN2)
+    b.train('b', LINCOLN3)
+  
+    poola = b.pools['a'].map { |k,v| [k,v]}.sort
+    poolb = b.pools['b'].map { |k,v| [k,v]}.sort
+    
+    assert_equal poola,poolb
+  end
+ 
+  def test_pool_merge
+    b = Bishop::Bayes.new
+            
+    b.load_default_stop_words
+    
+    b.train('lincoln', LINCOLN1)
+    b.train('lincoln', LINCOLN2)
+    b.train('lincoln', LINCOLN3)
+    
+    b.train('jabber', JABBER1)
+    b.train('jabber', JABBER2)
+    b.train('jabber', JABBER3)
     
     b.train('romeo',ROMEO)
 
@@ -179,8 +210,8 @@ class TestBayes < Minitest::Test
     assert j.has_key?('tokenizer')
     assert j.has_key?('stop_words')
     assert j.has_key?('pools')
-    train_counts = { '__Corpus__' => 7, 'lincoln' => 3, 'jabber' => 3, 'romeo' => 1}
-    ['__Corpus__','lincoln','jabber','romeo'].each do |p|
+    train_counts = { 'lincoln' => 3, 'jabber' => 3, 'romeo' => 1}
+    ['lincoln','jabber','romeo'].each do |p|
       assert j['pools'].has_key?(p)
       assert train_counts[p], j['pools'][p]['train_count']
       assert_equal j['pools'][p]['token_count'],j['pools'][p]['data'].inject(0) { |sum,n| sum + n[1] }
