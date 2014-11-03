@@ -7,7 +7,7 @@ Bundler.require(:default, :test)
 require_relative '../lib/bayes/bishop'
 
 class TestTokenizers < Minitest::Test
-  #parallelize_me!
+  parallelize_me!
 
   def test_simple_tokenizer
     tokenizer = Bishop::SimpleTokenizer.new

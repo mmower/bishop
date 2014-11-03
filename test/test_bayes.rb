@@ -7,7 +7,7 @@ Bundler.require(:default, :test)
 require_relative '../lib/bayes/bishop'
 
 class TestBayes < Minitest::Test
-  #parallelize_me!
+  parallelize_me!
 
   LINCOLN1 = "Four score and seven years ago our fathers brought forth on this continent,"+
     " a new nation, conceived in Liberty, and dedicated to the proposition that all"+
@@ -45,9 +45,7 @@ class TestBayes < Minitest::Test
     b = Bishop::Bayes.new
     assert_instance_of Bishop::SimpleTokenizer, b.tokenizer
     refute_nil b.combiner
-    assert_equal 0, b.pools.length
-    refute_nil b.corpus
-    assert b.dirty?
+    assert_equal 0, b.pool_names.length
     assert_equal 0, b.stop_words.length
   end
 
@@ -60,6 +58,16 @@ class TestBayes < Minitest::Test
     assert_equal sw.map {|s| s.downcase }, b.stop_words
   end  
   
+  def test_duplicate_stop_words
+    b = Bishop::Bayes.new
+    sw = %w{ Alpha bEta gammA delta epsilon alpha betA omega }
+    sw2 = sw.map { |s| s.downcase }.uniq.sort
+    assert_equal 0, b.stop_words.length
+    b.add_stop_words( sw )
+    assert_equal sw2.length, b.stop_words.length
+    assert_equal sw2, b.stop_words.sort
+  end  
+  
   def test_default_stop_words
     b = Bishop::Bayes.new
     assert_equal 0, b.stop_words.length
@@ -67,28 +75,23 @@ class TestBayes < Minitest::Test
     refute_equal 0, b.stop_words.length
   end
   
-  def test_load_stop_words
-    skip
-  end
-  
   def test_new_pool
     b = Bishop::Bayes.new
     p = b.new_pool('testing')
-    assert b.dirty?
-    assert b.pools.has_key?('testing')
-    assert_equal b.pools['testing'],p
+    refute_nil b.pool('testing')
+    assert_equal b.pool('testing'),p
 
     b.remove_pool('testing')
-    refute b.pools.has_key?('testing')
+    assert_nil b.pool('testing')
   end
   
   def test_rename_pool
     b = Bishop::Bayes.new
     p = b.new_pool('testing')
-    assert b.pools.has_key?('testing')
+    refute_nil b.pool('testing')
     b.rename_pool('testing','gnitset')
-    refute b.pools.has_key?('testing')
-    assert b.pools.has_key?('gnitset')
+    assert_nil b.pool('testing')
+    refute_nil b.pool('gnitset')
   end
   
   def test_pool_names
@@ -131,7 +134,6 @@ class TestBayes < Minitest::Test
   def test_train_array
     b = Bishop::Bayes.new
     t = Bishop::SimpleTokenizer.new
-    b.load_default_stop_words
   
     b.train('a', t.tokenize(LINCOLN1))
     b.train('a', t.tokenize(LINCOLN2))
@@ -141,10 +143,7 @@ class TestBayes < Minitest::Test
     b.train('b', LINCOLN2)
     b.train('b', LINCOLN3)
   
-    poola = b.pools['a'].map { |k,v| [k,v]}.sort
-    poolb = b.pools['b'].map { |k,v| [k,v]}.sort
-    
-    assert_equal poola,poolb
+    assert_equal b.pool('a').data, b.pool('b').data
   end
  
   def test_pool_merge
@@ -160,26 +159,18 @@ class TestBayes < Minitest::Test
     b.train('jabber', JABBER2)
     b.train('jabber', JABBER3)
     
-    b.train('romeo',ROMEO)
+    guess = b.guess(LINCOLN4)
 
-    refute b.guess('vorpal').has_key?('romeo')
-    refute b.guess('consecrate').has_key?('romeo')
+    assert guess.has_key?('lincoln')
+    refute guess.has_key?('jabber')
+
+    b.merge_pools('jabber','lincoln')
     
-    b.merge_pools('romeo','jabber')
-    
-    g3 = b.guess('vorpal')
+    guess = b.guess(LINCOLN4)
 
-    assert g3.has_key?('jabber')
-    assert g3.has_key?('romeo')
-    refute g3.has_key?('lincoln')
+    assert guess.has_key?('jabber')
+    assert guess.has_key?('lincoln')
 
-    b.merge_pools('romeo','lincoln')
-    
-    g4 = b.guess('consecrate')
-
-    refute g4.has_key?('jabber')
-    assert g4.has_key?('romeo')
-    assert g4.has_key?('lincoln')
     
   end
  
@@ -201,7 +192,6 @@ class TestBayes < Minitest::Test
     
     j = JSON.parse(b.to_json)
     
-    assert j.has_key?('tokenizer')
     assert j.has_key?('stop_words')
     assert j.has_key?('pools')
     train_counts = { 'lincoln' => 3, 'jabber' => 3, 'romeo' => 1}
