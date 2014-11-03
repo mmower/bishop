@@ -2,21 +2,21 @@ require 'rubygems'
 
 SPEC = Gem::Specification.new do |s|
 	s.name			=		"bishop"
-	s.version		=		"0.4.0"
-	s.author		=		"Matt Mower"
-	s.email			=		"self@mattmower.com"
-	s.homepage		=		"http://rubyforge.org/projects/bishop/"
+	s.version		=		"0.5.0"
+	s.author		=		"Richard Harrington"
+	s.email			=		"richard@maymount.com"
+  s.license  = 'LGPL-3.0+'
+	s.homepage		=		"https://github.com/maymount/bishop"
 	s.platform		=		Gem::Platform::RUBY
-	s.summary		=		"Bayesian classification and ART-2 clustering library."
-	
-	candidates		=		Dir.glob( "{bin,docs,lib,test}/**/*" )
+	s.summary		=		"Bayesian classification library. Refactoring of mmowers/bishop version."
+	s.description		=		"Bayesian classification library. Refactoring of mmowers/bishop version."
+	s.add_runtime_dependency 'stemmer'
+	candidates		=		Dir.glob( "{docs,lib,test}/**/*" )
 	
 	s.files 		=		candidates.delete_if do |item|
 								item.include?( "CVS" ) || item.include?( "rdoc" )
 							end
+  s.extra_rdoc_files = ['README.md','CHANGELOG.md','COPYING','COPYING.LESSER']
 	s.require_path	=		"lib"
-# 	s.autorequire	=		"bishop"
 	s.has_rdoc		=		true
-	
-	#s.add_dependency( "stemmer", ">= 1.0.1" )
 end
