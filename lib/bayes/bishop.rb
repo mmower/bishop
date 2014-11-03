@@ -1,11 +1,48 @@
+# This is a Naive Bayes classifier that can be used to categorize text based on trained "pools".
+# 
+# == Usage
+# 1. Create a Bishop::Bayes object:
+#    <tt>b = Bishop::Bayes.new</tt>
+# 2. Train with multiple pools of text:
+#    <tt>b.train('pool1')</tt>
+#    <tt>b.train('pool2')</tt>
+#    <tt>b.train('pool3')</tt>
+# 3. Call the guess method with a message to categorize:
+#    <tt>guesses = b.guess('This is a sentence')</tt>
+#    The return value is a hash where the keys are pool names and the values are the probability
+#    that the message belongs to that pool.  
 #
-# This module is a port to the Ruby language of the Reverend Bayesian classifier distributed
-# as part of the Divmod project (which is Copyright 2003 Amir Bakhtiar <amir@divmod.org>
+# == Features
+# * Stop words may be specified
+#    <tt>b.add_stop_words(an_array_words)</tt>
+#    <tt>b.add_stop_word('word')</tt>
+# * You can include the default stop words list    
+#    <tt>b.load_default_stop_words</tt>
+# * You can choose between the default tokenizer, a stemming tokenizer, or a custom tokenizer
+#    <tt>b = Bishop::Bayes.new</tt>
+#    <tt>b = Bishop::Bayes.new(Bishop::StemmingTokenizer)</tt>
+#    <tt>b = Bishop::Bayes.new(CustomTokenizer)</tt>
+#    
+#    <tt></tt>
+#    
+# Copyright 2014, Maymount Enterprises, Ltd. <richard@maymount.com> 
 #
-# This Ruby port is Copyright 2005 Matt Mower <self@mattmower.com> and is free software;
-# you can distribute it and/or modify it under the terms of version 2.1 of the GNU
-# Lesser General Public License as published by the Free Software Foundation.
+# It is a port to the Ruby language of the Divmod project (which is Copyright 2003 Amir Bakhtiar <amir@divmod.org> 
+# and based on the Ruby port, Copyright 2005 by Matt Mower <self@mattmower.com> 
 #
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser Public License for more details.
+#
+# You should have received a copy of the GNU Lesser Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# 
 
 require 'yaml'
 require 'stemmer'

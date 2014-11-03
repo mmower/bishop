@@ -98,14 +98,6 @@ class TestBayes < Minitest::Test
     assert_equal names1.sort, b.pool_names
   end
   
-  def test_merge_pools
-    skip
-  end
-  
-  def test_save_state
-    skip
-  end
-
   def test_train_simple
     b = Bishop::Bayes.new
             
@@ -120,6 +112,8 @@ class TestBayes < Minitest::Test
     b.train('jabber', JABBER3)
     
     guess_lincoln = b.guess(LINCOLN4)
+    
+    assert_kind_of Hash, guess_lincoln
     
     guess_jabber = b.guess(JABBER4)
     
